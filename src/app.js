@@ -11,7 +11,7 @@ const { $Enums } = require('./generated/prisma');
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log('Backend server berjalan di port ${PORT}');
+    console.log(`Backend server berjalan di port ${PORT}`);
 });
 
 //Middleware Global
