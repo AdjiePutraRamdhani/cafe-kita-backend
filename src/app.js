@@ -9,7 +9,7 @@ const userRoutes = require('./routes/userRoutes');
 const { $Enums } = require('./generated/prisma');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', () => {
     console.log('Backend server berjalan di port ${PORT}');
 });
