@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Definisikan model Menu
+model Menu {
+  id        Int      @id @default(autoincrement()) // Primary key, auto-increment
+  //menuId       String   @unique
+  nama      String   @db.VarChar(255)              // Nama menu, VarChar dengan panjang maks 255
+  harga     Float                                  // Harga menu
+  kategori  String   @db.VarChar(100)              // Kategori menu
+  createdAt DateTime @default(now())               // Waktu pembuatan, defaultnya waktu sekarang
+  updatedAt DateTime @updatedAt                    // Waktu pembaruan, otomatis diperbarui
+  orderItems   OrderItem[]
+}
+
+// MODEL BARU: Order
+model Order {
+  id            Int      @id @default(autoincrement())
+  customerName  String?  // Nama pelanggan (opsional)
+  tableNumber   Int?     // Nomor meja (opsional)
+  totalPrice    Float    // Total harga dari semua item
+  status        String   @default("PENDING") // Status pesanan: PENDING, COMPLETED, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  items         OrderItem[] // Relasi ke item-item dalam pesanan ini
+}
+
+// MODEL BARU: OrderItem (Tabel Jembatan/Join Table)
+// Ini akan menghubungkan Order dan Menu, dan menyimpan kuantitas
+model OrderItem {
+  orderId      Int
+  menuId       Int
+  quantity     Int      // Jumlah item yang dipesan
+  priceAtOrder Float    // Harga item pada saat dipesan (penting untuk arsip)
+
+  order        Order    @relation(fields: [orderId], references: [id])
+  menu         Menu     @relation(fields: [menuId], references: [id])
+
+  @@id([orderId, menuId]) // Primary key komposit
+}
+
+// ENUM BARU untuk Peran Pengguna
+enum Role {
+  ADMIN
+  KASIR
+}
+
+// MODEL BARU untuk Pengguna
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique // Username harus unik
+  password  String   // Password yang sudah di-hash
+  role      Role     @default(KASIR) // Peran pengguna, defaultnya adalah KASIR
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
