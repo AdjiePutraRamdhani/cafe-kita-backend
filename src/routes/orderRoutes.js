@@ -22,7 +22,7 @@ router.route('/:id')
 
 router.route('/:id/status')
     .patch(
-        restrictTo('KASIR'), // Bisa diupdate oleh admin atau kasir
+        restrictTo('KASIR', 'ADMIN'), // Bisa diupdate oleh admin atau kasir
         updateStatusValidationRules(),
         validate,
         orderController.updateOrderStatus

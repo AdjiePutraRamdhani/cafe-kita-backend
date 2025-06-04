@@ -4,8 +4,6 @@ const prisma = new PrismaClient();
 
 // Membuat pesanan baru
 exports.createOrder = async (req, res) => {
-    // Frontend akan mengirim data seperti ini:
-    // { customerName: "Budi", tableNumber: 5, items: [{ menuId: 1, quantity: 2 }, { menuId: 4, quantity: 1 }] }
     const { customerName, tableNumber, items } = req.body;
 
     if (!items || items.length === 0) {
@@ -13,14 +11,18 @@ exports.createOrder = async (req, res) => {
     }
 
     try {
-        // Gunakan Prisma Transaction untuk memastikan semua query berhasil atau gagal bersamaan
         const newOrder = await prisma.$transaction(async (tx) => {
-            // 1. Dapatkan semua ID menu dari request
-            const menuIds = items.map(item => item.menuId);
+            // 1. Dapatkan semua ID menu dari request DAN UBAH MENJADI INTEGER
+            const menuIds = items.map(item => parseInt(item.menuId, 10)); // <-- PERUBAHAN DI SINI
+
+            // Pastikan tidak ada NaN setelah parsing (jika ada menuId yang tidak valid)
+            if (menuIds.some(id => isNaN(id))) {
+                throw new Error("Satu atau lebih menuId tidak valid (bukan angka).");
+            }
 
             // 2. Ambil data menu dari database untuk mendapatkan harga yang valid
             const menuItemsInDb = await tx.menu.findMany({
-                where: { id: { in: menuIds } },
+                where: { id: { in: menuIds } }, // Sekarang menuIds berisi angka
             });
 
             // Pastikan semua menuId valid
@@ -31,12 +33,15 @@ exports.createOrder = async (req, res) => {
             // 3. Hitung total harga berdasarkan harga dari database
             let totalPrice = 0;
             const orderItemsData = items.map(item => {
-                const menuItem = menuItemsInDb.find(dbItem => dbItem.id === item.menuId);
-                totalPrice += menuItem.harga * item.quantity;
+                const menuItem = menuItemsInDb.find(dbItem => dbItem.id === parseInt(item.menuId, 10)); // <-- Tambahkan parseInt di sini juga untuk mencocokkan
+                if (!menuItem) { // Tambahan: pastikan menuItem ditemukan
+                    throw new Error(`Menu item dengan ID ${item.menuId} tidak ditemukan setelah validasi.`);
+                }
+                totalPrice += menuItem.harga * parseInt(item.quantity, 10); // <-- parseInt untuk quantity
                 return {
-                    menuId: item.menuId,
-                    quantity: item.quantity,
-                    priceAtOrder: menuItem.harga, // Simpan harga saat ini
+                    menuId: parseInt(item.menuId, 10), // <-- parseInt
+                    quantity: parseInt(item.quantity, 10), // <-- parseInt
+                    priceAtOrder: menuItem.harga,
                 };
             });
 
@@ -44,15 +49,13 @@ exports.createOrder = async (req, res) => {
             const createdOrder = await tx.order.create({
                 data: {
                     customerName,
-                    tableNumber,
+                    tableNumber: tableNumber ? parseInt(tableNumber, 10) : null, // Parse tableNumber jika ada
                     totalPrice,
                     status: 'PENDING',
-                    // Buat OrderItem secara bersamaan (nested write)
                     items: {
                         create: orderItemsData,
                     },
                 },
-                // Sertakan item yang baru dibuat dalam respons
                 include: {
                     items: true,
                 },
@@ -72,8 +75,8 @@ exports.createOrder = async (req, res) => {
         console.error("Error di createOrder:", error);
         res.status(500).json({
             status: "error",
-            message: "Gagal membuat pesanan",
-            error: error.message
+            message: error.message || "Gagal membuat pesanan", // Tampilkan pesan error yang lebih spesifik jika ada
+            // error: error.message // Anda bisa uncomment ini untuk debugging lebih detail di development
         });
     }
 };
