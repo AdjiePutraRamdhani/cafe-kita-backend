@@ -16,7 +16,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
 //Middleware Global
 app.use(cors({
-    origin: 'http://localhost:3001',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
