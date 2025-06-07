@@ -21,6 +21,7 @@ model Menu {
   nama      String   @db.VarChar(255)              // Nama menu, VarChar dengan panjang maks 255
   harga     Float                                  // Harga menu
   kategori  String   @db.VarChar(100)              // Kategori menu
+  imageUrl     String?
   createdAt DateTime @default(now())               // Waktu pembuatan, defaultnya waktu sekarang
   updatedAt DateTime @updatedAt                    // Waktu pembaruan, otomatis diperbarui
   orderItems   OrderItem[]

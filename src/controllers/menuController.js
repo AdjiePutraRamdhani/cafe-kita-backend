@@ -56,7 +56,7 @@ exports.getMenuItemById = async (req, res) => {
 // Membuat item menu baru
 exports.createMenuItem = async (req, res) => {
     try {
-        const { nama, harga, kategori } = req.body;
+        const { nama, harga, kategori, imageUrl } = req.body;
 
         if (!nama || harga === undefined || !kategori) { // harga bisa 0, jadi cek undefined
             return res.status(400).json({
@@ -93,7 +93,7 @@ exports.createMenuItem = async (req, res) => {
 exports.updateMenuItem = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { nama, harga, kategori } = req.body;
+        const { nama, harga, kategori, imageUrl } = req.body;
 
         // Cek apakah menu item ada
         const existingMenu = await prisma.menu.findUnique({ where: { id } });
@@ -110,6 +110,7 @@ exports.updateMenuItem = async (req, res) => {
                 ...(nama && { nama }),
                 ...(harga !== undefined && { harga: parseFloat(harga) }),
                 ...(kategori && { kategori }),
+                ...(imageUrl && { imageUrl }),
             },
         });
 
