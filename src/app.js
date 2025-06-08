@@ -16,7 +16,8 @@ app.listen(PORT, '0.0.0.0', () => {
 
 //Middleware Global
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000','http://localhost:3001',
+    'https://cafe-kita-frontend.vercel.app']
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
